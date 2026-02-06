@@ -1,7 +1,6 @@
 {
-  "name": "Ibiza Eclipse Storyline",
+  "name": "Ibiza Total Solar",
   "short_name": "Ibiza Solar",
-  "description": "A luxury poetic journey through the Ibiza solar eclipse.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#000000",
@@ -10,8 +9,7 @@
     {
       "src": "https://cdn-icons-png.flaticon.com/512/2530/2530880.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
