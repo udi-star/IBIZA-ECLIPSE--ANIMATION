@@ -10,26 +10,33 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
 
+    <!-- Styles & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Babel for on-the-fly TSX compilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
-        // Ensure process.env.API_KEY is available for the SDK
+        // SDK requirements
         window.process = { env: { API_KEY: "" } };
     </script>
 
     <style>
-        body { 
+        body, html { 
             background: #000; 
             color: #fff; 
             font-family: 'Inter', sans-serif; 
             margin: 0; 
+            padding: 0;
             overflow: hidden; 
+            height: 100%;
+            width: 100%;
             -webkit-tap-highlight-color: transparent; 
         }
         .serif { font-family: 'Playfair Display', serif; }
         
+        /* Interactive Elements */
         input[type=range] { 
             -webkit-appearance: none; 
             background: transparent; 
@@ -38,11 +45,12 @@
         }
         input[type=range]::-webkit-slider-thumb { 
             -webkit-appearance: none; 
-            height: 48px; 
-            width: 48px; 
+            height: 60px; 
+            width: 60px; 
             background: transparent; 
         }
         
+        /* Cosmic Visuals */
         .star { 
             position: absolute; 
             background: white; 
@@ -53,26 +61,46 @@
         
         @keyframes gold-pulse {
             0%, 100% { 
-              filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4)) blur(2px);
+              filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.4)) blur(1px);
               transform: scale(1);
             }
             50% { 
-              filter: drop-shadow(0 0 50px rgba(255, 215, 0, 0.8)) blur(0px);
-              transform: scale(1.02);
+              filter: drop-shadow(0 0 60px rgba(255, 215, 0, 0.9)) blur(0px);
+              transform: scale(1.03);
             }
         }
-        .totality-glow { animation: gold-pulse 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        .totality-glow { animation: gold-pulse 8s infinite cubic-bezier(0.4, 0, 0.2, 1); }
         
+        /* Transitions */
         @keyframes content-fade-in {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-content { animation: content-fade-in 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .animate-content { animation: content-fade-in 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .luxury-ease { transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        /* Loader */
+        #initial-loader {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 1s ease-out;
+        }
+        .loader-ring {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255,215,0,0.2);
+            border-top-color: #FFD700;
+            border-radius: 50%;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 <script type="importmap">
 {
@@ -83,26 +111,32 @@
 </script>
 </head>
 <body>
+    <div id="initial-loader">
+        <div class="loader-ring"></div>
+    </div>
+    
     <div id="root"></div>
+
+    <!-- The App Logic -->
     <script type="text/babel" src="index.tsx" data-presets="react,typescript"></script>
+    
     <script>
-        // Defensive Service Worker Registration to handle origin mismatches in preview environments
+        // Remove loader once React has had a chance to mount
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('initial-loader');
+                if (loader) loader.style.opacity = '0';
+                setTimeout(() => loader && loader.remove(), 1000);
+            }, 1500);
+        });
+
+        // Robust SW registration for GitHub Pages sub-directories
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Determine the correct path relative to the current script's origin
                 const swPath = './sw.js';
                 navigator.serviceWorker.register(swPath)
-                    .then(registration => {
-                        console.log('SW registered successfully:', registration.scope);
-                    })
-                    .catch(err => {
-                        // Log a warning instead of a blocking error if it's an origin mismatch (common in sandboxes)
-                        if (err.message.includes('origin')) {
-                            console.warn('Service Worker registration skipped: Origin mismatch (Expected in some preview environments).');
-                        } else {
-                            console.error('Service Worker registration failed:', err);
-                        }
-                    });
+                    .then(reg => console.log('Solar Journey Ready Offline'))
+                    .catch(err => console.warn('Offline mode unavailable:', err.message));
             });
         }
     </script>
