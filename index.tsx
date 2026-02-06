@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'https://esm.sh/react@^19.2.4';
 import ReactDOM from 'react-dom/client';
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type } from "https://esm.sh/@google/genai@^1.40.0";
 
 // --- Configuration & Types ---
 const PHASES = ['before', 'first_contact', 'during_peak', 'totality', 'return_of_light', 'afterglow'];
@@ -82,7 +82,6 @@ const App: React.FC = () => {
     const animate = (time: number) => {
       if (isPlaying) {
         const delta = time - lastTime;
-        // Cinematic Slow-mo near totality
         const speed = (progress > 0.47 && progress < 0.53) ? 0.000018 : 0.00005;
         setProgress(p => {
           const next = p + delta * speed;
@@ -98,7 +97,11 @@ const App: React.FC = () => {
 
   const fetchAI = useCallback(async () => {
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+      // Safe access to process.env
+      const apiKey = (window as any).process?.env?.API_KEY || "";
+      if (!apiKey) return;
+
+      const ai = new GoogleGenAI({ apiKey });
       const phaseSchema = {
         type: Type.OBJECT,
         properties: {
@@ -133,7 +136,7 @@ const App: React.FC = () => {
         const parsed = JSON.parse(response.text);
         if (PHASES.every(k => parsed[k])) setStoryline(parsed);
       }
-    } catch (e) { console.warn("AI narrative failed, using high-end defaults.", e); }
+    } catch (e) { console.warn("AI narrative failed, using defaults.", e); }
   }, []);
 
   useEffect(() => { fetchAI(); }, [fetchAI]);
@@ -233,5 +236,9 @@ const App: React.FC = () => {
   );
 };
 
-const root = ReactDOM.createRoot(document.getElementById('root')!);
-root.render(<App />);
+// Ensure the root element is present before mounting
+const container = document.getElementById('root');
+if (container) {
+  const root = ReactDOM.createRoot(container);
+  root.render(<App />);
+}

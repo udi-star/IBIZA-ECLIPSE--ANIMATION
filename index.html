@@ -16,8 +16,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
-    <!-- Babel Standalone for GitHub Pages -->
+    <!-- Babel Standalone: Essential for running TSX in the browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script>
+        // SHIM: Prevent "process is not defined" crash on GitHub Pages
+        window.process = { env: { API_KEY: "" } };
+    </script>
 
     <style>
         body {
@@ -30,7 +35,6 @@
         }
         .serif { font-family: 'Playfair Display', serif; }
         
-        /* Custom range slider styling */
         input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -58,22 +62,23 @@
 
         .phase-transition { transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
-
-    <script type="importmap">
+<script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/client": "https://esm.sh/react-dom@^19.2.4/client",
-    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/"
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
+    "react": "https://esm.sh/react@^19.2.4"
   }
 }
 </script>
 </head>
 <body>
     <div id="root"></div>
+
+    <!-- Use explicit ESM imports inside the script to avoid importmap issues -->
     <script type="text/babel" data-type="module" src="index.tsx"></script>
+
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
