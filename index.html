@@ -10,15 +10,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
 
-    <!-- Styles & Fonts -->
+    <!-- Tailwind for luxury styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Premium Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
-    <!-- Babel for on-the-fly TSX compilation -->
+    <!-- Babel for browser-side TSX compilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
-        // SDK requirements
+        // Mocking process for the Google GenAI SDK
         window.process = { env: { API_KEY: "" } };
     </script>
 
@@ -36,7 +37,6 @@
         }
         .serif { font-family: 'Playfair Display', serif; }
         
-        /* Interactive Elements */
         input[type=range] { 
             -webkit-appearance: none; 
             background: transparent; 
@@ -50,7 +50,6 @@
             background: transparent; 
         }
         
-        /* Cosmic Visuals */
         .star { 
             position: absolute; 
             background: white; 
@@ -71,7 +70,6 @@
         }
         .totality-glow { animation: gold-pulse 8s infinite cubic-bezier(0.4, 0, 0.2, 1); }
         
-        /* Transitions */
         @keyframes content-fade-in {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -81,8 +79,8 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Loader */
-        #initial-loader {
+        /* Initial Loader */
+        #loader {
             position: fixed;
             inset: 0;
             background: #000;
@@ -92,13 +90,13 @@
             z-index: 1000;
             transition: opacity 1s ease-out;
         }
-        .loader-ring {
-            width: 40px;
-            height: 40px;
-            border: 1px solid rgba(255,215,0,0.2);
+        .ring {
+            width: 50px;
+            height: 50px;
+            border: 2px solid rgba(255, 215, 0, 0.1);
             border-top-color: #FFD700;
             border-radius: 50%;
-            animation: spin 2s linear infinite;
+            animation: spin 1.5s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -111,32 +109,33 @@
 </script>
 </head>
 <body>
-    <div id="initial-loader">
-        <div class="loader-ring"></div>
+    <div id="loader">
+        <div class="ring"></div>
     </div>
     
     <div id="root"></div>
 
-    <!-- The App Logic -->
-    <script type="text/babel" src="index.tsx" data-presets="react,typescript"></script>
+    <!-- The application: data-type="module" is critical for ESM imports in index.tsx -->
+    <script type="text/babel" data-type="module" src="index.tsx" data-presets="react,typescript"></script>
     
     <script>
-        // Remove loader once React has had a chance to mount
+        // Clean up loader after initialization
         window.addEventListener('load', () => {
             setTimeout(() => {
-                const loader = document.getElementById('initial-loader');
-                if (loader) loader.style.opacity = '0';
-                setTimeout(() => loader && loader.remove(), 1000);
-            }, 1500);
+                const l = document.getElementById('loader');
+                if (l) {
+                    l.style.opacity = '0';
+                    setTimeout(() => l.remove(), 1000);
+                }
+            }, 2000);
         });
 
-        // Robust SW registration for GitHub Pages sub-directories
+        // PWA Service Worker Registration with relative pathing for GitHub Pages
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                const swPath = './sw.js';
-                navigator.serviceWorker.register(swPath)
-                    .then(reg => console.log('Solar Journey Ready Offline'))
-                    .catch(err => console.warn('Offline mode unavailable:', err.message));
+                navigator.serviceWorker.register('./sw.js', { scope: './' })
+                    .then(reg => console.log('Solar Experience Ready Offline'))
+                    .catch(err => console.warn('Offline mode setup skipped:', err.message));
             });
         }
     </script>

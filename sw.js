@@ -1,11 +1,13 @@
-const CACHE_NAME = 'ibiza-solar-v3';
+const CACHE_NAME = 'solar-experience-v5';
 const ASSETS = [
   './',
   './index.html',
   './index.tsx',
   './manifest.json',
   'https://cdn.tailwindcss.com',
-  'https://unpkg.com/@babel/standalone/babel.min.js'
+  'https://unpkg.com/@babel/standalone/babel.min.js',
+  'https://esm.sh/react@19.0.0',
+  'https://esm.sh/react-dom@19.0.0/client'
 ];
 
 self.addEventListener('install', event => {
@@ -32,7 +34,7 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request).catch(() => {
-        // Fallback or just let it fail if network is down
+        // Fallback silently if offline and not in cache
       });
     })
   );
