@@ -16,11 +16,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
-    <!-- Babel Standalone: Essential for running TSX in-browser without a build step -->
+    <!-- Babel Standalone: Compiles the TSX directly in the browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
-        // CRITICAL: Browsers do not have "process". We define it here to prevent the app from crashing.
+        // CRITICAL: Definining process.env prevents the app from crashing on start
         window.process = { env: { API_KEY: "" } };
     </script>
 
@@ -75,8 +75,8 @@
     <div id="root"></div>
 
     <!-- 
-      By using type="text/babel" with src, we tell Babel to fetch the file as plain text.
-      This completely fixes the "Failed to load module" / "MIME type" error on GitHub.
+      This script tag fetches index.tsx and compiles it. 
+      This bypasses the MIME type errors on GitHub Pages.
     -->
     <script type="text/babel" src="index.tsx" data-presets="react,typescript"></script>
 
