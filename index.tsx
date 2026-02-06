@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'https://esm.sh
 import { createRoot } from 'https://esm.sh/react-dom@19.0.0/client';
 import { GoogleGenAI, Type } from "https://esm.sh/@google/genai@1.40.0";
 
-// --- Logic & Config ---
+// --- Configuration ---
 const PHASES = ['before', 'first_contact', 'during_peak', 'totality', 'return_of_light', 'afterglow'];
 const PHASE_LABELS: Record<string, string> = {
   before: 'Anticipation', first_contact: 'Transformation', during_peak: 'Ascension', 
@@ -18,7 +18,7 @@ const DEFAULT_STORY: any = {
   afterglow: { sentence: "The shadow leaves a golden mark upon the soul.", feeling: "Presence, Awake", reflection: "How will you speak of this to the future?" }
 };
 
-// --- Component: Visual ---
+// --- Sub-Component: Visual ---
 const EclipseVisual = ({ progress }: { progress: number }) => {
   const moonOffset = (0.5 - progress) * 115;
   const isTotality = progress > 0.497 && progress < 0.503;
@@ -41,7 +41,7 @@ const EclipseVisual = ({ progress }: { progress: number }) => {
   );
 };
 
-// --- App Root ---
+// --- Main App Component ---
 const App = () => {
   const [story, setStory] = useState(DEFAULT_STORY);
   const [progress, setProgress] = useState(0);
@@ -52,6 +52,8 @@ const App = () => {
   })), []);
 
   const currentIdx = Math.min(Math.floor(progress * PHASES.length), PHASES.length - 1);
+  const currentKey = PHASES[currentIdx];
+  const activeData = story[currentKey] || DEFAULT_STORY[currentKey];
 
   useEffect(() => {
     let frame: number;
@@ -77,14 +79,17 @@ const App = () => {
         const ai = new GoogleGenAI({ apiKey: key });
         const res = await ai.models.generateContent({
           model: 'gemini-3-flash-preview',
-          contents: 'Poetic story for Ibiza Solar Eclipse in 6 phases.',
+          contents: 'Generate 6 poetic phases for Ibiza Total Solar. JSON format.',
           config: {
-            systemInstruction: 'Minimal, luxury tone. 6 phases: before, first_contact, during_peak, totality, return_of_light, afterglow.',
+            systemInstruction: 'Luxury experience designer. Minimal, poetic. 6 phases: before, first_contact, during_peak, totality, return_of_light, afterglow.',
             responseMimeType: "application/json"
           }
         });
-        if (res.text) setStory(JSON.parse(res.text));
-      } catch (e) {}
+        if (res.text) {
+          const parsed = JSON.parse(res.text);
+          setStory(parsed);
+        }
+      } catch (e) { console.warn("AI narrative fetch failed, using poetic defaults."); }
     };
     fetchNarrative();
   }, []);
@@ -104,29 +109,36 @@ const App = () => {
 
       <main className="flex-1 flex flex-col items-center justify-center z-10 px-8 text-center">
         <EclipseVisual progress={progress} />
-        <div className="mt-12 min-h-[220px] flex flex-col items-center">
-          <h2 className="serif text-3xl md:text-5xl mb-6 transition-all duration-700">{story[PHASES[currentIdx]]?.sentence}</h2>
-          <div className="flex gap-4 mb-8">
-            {story[PHASES[currentIdx]]?.feeling.split(',').map((f:any, i:any) => <span key={i} className="text-[10px] uppercase tracking-[.4em] text-yellow-500/80 px-3 py-1 border border-yellow-500/20 rounded-full">{f.trim()}</span>)}
+        <div className="mt-12 min-h-[220px] flex flex-col items-center max-w-2xl mx-auto">
+          <h2 className="serif text-3xl md:text-5xl mb-6 transition-all duration-700">{activeData?.sentence}</h2>
+          <div className="flex gap-4 mb-8 overflow-x-auto no-scrollbar">
+            {(activeData?.feeling || "").split(',').map((f: string, i: number) => (
+              <span key={i} className="text-[10px] uppercase tracking-[.4em] text-yellow-500/80 px-3 py-1 border border-yellow-500/20 rounded-full whitespace-nowrap">
+                {f.trim()}
+              </span>
+            ))}
           </div>
-          <p className="text-white/40 italic text-lg max-w-sm">{story[PHASES[currentIdx]]?.reflection}</p>
+          <p className="text-white/40 italic text-lg max-w-sm border-t border-white/5 pt-6">{activeData?.reflection}</p>
         </div>
       </main>
 
       <footer className="p-10 md:p-16 z-10 w-full max-w-4xl mx-auto">
         <div className="flex justify-between mb-8 overflow-x-auto no-scrollbar gap-4">
           {PHASES.map((k, i) => (
-            <button key={k} onClick={() => {setProgress(i/(PHASES.length-1)); setPlaying(false);}} className={`text-[10px] uppercase tracking-[.3em] transition-all ${i===currentIdx ? 'text-white font-bold' : 'text-white/30 hover:text-white/60'}`}>{PHASE_LABELS[k]}</button>
+            <button key={k} onClick={() => {setProgress(i / (PHASES.length - 1)); setPlaying(false);}} className={`text-[10px] uppercase tracking-[.3em] transition-all whitespace-nowrap ${i === currentIdx ? 'text-white font-bold' : 'text-white/30 hover:text-white/60'}`}>
+              {PHASE_LABELS[k]}
+            </button>
           ))}
         </div>
         <div className="relative h-[1px] w-full bg-white/20">
           <input type="range" min="0" max="1" step="0.0001" value={progress} onInput={e => {setProgress(parseFloat(e.currentTarget.value)); setPlaying(false);}} className="absolute -top-5 left-0 w-full h-10 opacity-0 z-20" />
-          <div className="absolute h-full bg-yellow-500" style={{ width: `${progress*100}%` }} />
-          <div className="absolute w-3 h-3 bg-white rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2" style={{ left: `${progress*100}%` }} />
+          <div className="absolute h-full bg-yellow-500" style={{ width: `${progress * 100}%` }} />
+          <div className="absolute w-3 h-3 bg-white rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2" style={{ left: `${progress * 100}%` }} />
         </div>
       </footer>
     </div>
   );
 };
 
-createRoot(document.getElementById('root')!).render(<App />);
+const root = createRoot(document.getElementById('root')!);
+root.render(<App />);

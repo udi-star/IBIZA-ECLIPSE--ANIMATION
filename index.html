@@ -15,11 +15,12 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
+        // Prevent crashes if some library checks for process.env
         window.process = { env: { API_KEY: "" } };
     </script>
 
     <style>
-        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; }
+        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; }
         .serif { font-family: 'Playfair Display', serif; }
         input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; cursor: pointer; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 40px; width: 40px; background: transparent; }
@@ -29,6 +30,8 @@
             50% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.7)); }
         }
         .totality-glow { animation: gold-pulse 4s infinite ease-in-out; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 <script type="importmap">
 {
@@ -42,6 +45,7 @@
 </head>
 <body>
     <div id="root"></div>
+    <!-- Babel compiles the TSX directly in the browser, bypassing MIME type issues -->
     <script type="text/babel" src="index.tsx" data-presets="react,typescript"></script>
     <script>
         if ('serviceWorker' in navigator) {
