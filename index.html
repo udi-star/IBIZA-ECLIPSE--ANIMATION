@@ -16,14 +16,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
-    <!-- Babel Standalone for TSX transpilation -->
+    <!-- Babel Standalone: Using data-presets for robust TSX support -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
-        // CRITICAL SHIM: GitHub Pages / Browsers don't have 'process'. 
-        // We define it before any other scripts run to prevent crashing.
-        window.process = window.process || { env: {} };
-        // The API key will be injected here by the environment.
+        // CRITICAL: Prevent "ReferenceError: process is not defined"
+        window.process = { env: { API_KEY: "" } };
     </script>
 
     <style>
@@ -61,7 +59,6 @@
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
         .phase-transition { transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 <script type="importmap">
@@ -77,8 +74,8 @@
 <body>
     <div id="root"></div>
 
-    <!-- index.tsx is loaded via Babel as a module -->
-    <script type="text/babel" data-type="module" src="index.tsx"></script>
+    <!-- We use data-presets and src without type="module" so Babel fetches it as text, bypasses MIME check -->
+    <script type="text/babel" src="index.tsx" data-presets="react,typescript"></script>
 
     <script>
         if ('serviceWorker' in navigator) {

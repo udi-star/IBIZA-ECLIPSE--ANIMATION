@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'https://esm.sh/react@19.0.0';
-import { createRoot } from 'https://esm.sh/react-dom@19.0.0/client';
+import ReactDOM from 'https://esm.sh/react-dom@19.0.0/client';
 import { GoogleGenAI, Type } from "https://esm.sh/@google/genai@1.40.0";
 
-// --- Configuration & Types ---
+// --- Configuration & Constants ---
 const PHASES = ['before', 'first_contact', 'during_peak', 'totality', 'return_of_light', 'afterglow'];
 const PHASE_LABELS: Record<string, string> = {
   before: 'Anticipation',
@@ -22,7 +22,7 @@ const DEFAULT_STORYLINE: any = {
   afterglow: { sentence: "The shadow leaves a golden mark upon the soul.", feeling: "Presence, Awake", reflection: "How will you speak of this to the future?" }
 };
 
-// --- Sub-Components ---
+// --- Component: EclipseVisual ---
 const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
   const moonOffset = (0.5 - progress) * 115;
   const isTotality = progress > 0.49 && progress < 0.51;
@@ -60,6 +60,27 @@ const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
   );
 };
 
+// --- Component: PhaseContent ---
+const PhaseContent: React.FC<{ data: any, active: boolean }> = ({ data, active }) => {
+  return (
+    <div className={`flex flex-col items-center text-center phase-transition ${active ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12 blur-md'}`}>
+      <h2 className="serif text-white text-4xl md:text-5xl lg:text-6xl mb-8 leading-tight tracking-wide font-light drop-shadow-2xl px-4">
+        {data.sentence}
+      </h2>
+      <div className="flex items-center space-x-6 mb-10">
+        {data.feeling.split(',').map((f: string, i: number) => (
+          <span key={i} className="text-[10px] uppercase tracking-[0.6em] text-yellow-500 font-bold px-5 py-1.5 border border-yellow-500/30 rounded-full bg-yellow-500/5">
+            {f.trim()}
+          </span>
+        ))}
+      </div>
+      <p className="text-yellow-100/70 italic font-light text-xl md:text-2xl max-w-sm mx-auto leading-relaxed pt-8 border-t border-white/10 px-6">
+        {data.reflection}
+      </p>
+    </div>
+  );
+};
+
 // --- Main Application ---
 const App: React.FC = () => {
   const [storyline, setStoryline] = useState<any>(DEFAULT_STORYLINE);
@@ -82,7 +103,7 @@ const App: React.FC = () => {
     const animate = (time: number) => {
       if (isPlaying) {
         const delta = time - lastTime;
-        const speed = (progress > 0.47 && progress < 0.53) ? 0.000018 : 0.00005;
+        const speed = (progress > 0.47 && progress < 0.53) ? 0.000015 : 0.000045;
         setProgress(p => {
           const next = p + delta * speed;
           return next > 1 ? 0 : next;
@@ -97,7 +118,6 @@ const App: React.FC = () => {
 
   const fetchAI = useCallback(async () => {
     try {
-      // Safe access to process.env (Shimmed in index.html)
       const apiKey = (window as any).process?.env?.API_KEY || "";
       if (!apiKey) return;
 
@@ -116,7 +136,7 @@ const App: React.FC = () => {
         model: 'gemini-3-flash-preview',
         contents: 'Create premium poetic content for Ibiza Solar. Use exactly 6 phases.',
         config: {
-          systemInstruction: 'Luxury experience designer. 6 phases: before, first_contact, during_peak, totality, return_of_light, afterglow. Minimal, premium tone.',
+          systemInstruction: 'Luxury experience designer for "Ibiza Total Solar". 6 phases. Premium, minimal, poetic.',
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
@@ -134,9 +154,11 @@ const App: React.FC = () => {
       });
       if (response.text) {
         const parsed = JSON.parse(response.text);
-        if (PHASES.every(k => parsed[k])) setStoryline(parsed);
+        setStoryline(parsed);
       }
-    } catch (e) { console.warn("AI narrative failed, using defaults.", e); }
+    } catch (e) {
+      console.warn("AI Load skipped/failed, using high-end defaults.");
+    }
   }, []);
 
   useEffect(() => { fetchAI(); }, [fetchAI]);
@@ -158,7 +180,7 @@ const App: React.FC = () => {
           onClick={() => setIsPlaying(!isPlaying)}
           className="flex items-center space-x-4 text-[11px] uppercase tracking-[0.4em] text-white hover:text-yellow-400 transition-all group"
         >
-          <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:border-yellow-500/50 group-hover:bg-yellow-500/5">
+          <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:border-yellow-500/50 group-hover:bg-yellow-500/5 transition-all">
             {isPlaying ? (
               <div className="flex space-x-1">
                 <div className="w-1 h-3 bg-white group-hover:bg-yellow-500" />
@@ -172,35 +194,17 @@ const App: React.FC = () => {
         </button>
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
-        <div className="mb-6 transition-transform duration-[2000ms]" style={{ transform: `scale(${1 + (progress > 0.45 && progress < 0.55 ? 0.12 : 0)})` }}>
+      <div className="flex-1 flex flex-col items-center justify-center relative">
+        <div className="mb-4 transition-transform duration-[2000ms]" style={{ transform: `scale(${1 + (progress > 0.45 && progress < 0.55 ? 0.12 : 0)})` }}>
           <EclipseVisual progress={progress} />
         </div>
 
-        <div className="relative w-full max-w-2xl text-center min-h-[300px] flex items-center justify-center">
-          {PHASES.map((key, index) => {
-            const data = storyline[key] || DEFAULT_STORYLINE[key];
-            return (
-              <div 
-                key={key} 
-                className={`absolute phase-transition flex flex-col items-center pointer-events-none ${index === currentPhaseIndex ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-90 blur-2xl'}`}
-              >
-                <h2 className="serif text-white text-4xl md:text-5xl lg:text-6xl mb-8 leading-tight tracking-wide font-light drop-shadow-2xl">
-                  {data?.sentence}
-                </h2>
-                <div className="flex items-center space-x-6 mb-10">
-                  {data?.feeling?.split(',').map((f: string, i: number) => (
-                    <span key={i} className="text-[10px] uppercase tracking-[0.6em] text-yellow-500 font-bold px-5 py-1.5 border border-yellow-500/30 rounded-full bg-yellow-500/5">
-                      {f.trim()}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-yellow-100/70 italic font-light text-xl md:text-2xl max-w-sm mx-auto leading-relaxed pt-8 border-t border-white/10">
-                  {data?.reflection}
-                </p>
-              </div>
-            );
-          })}
+        <div className="relative w-full max-w-2xl text-center flex items-center justify-center h-[320px]">
+          {PHASES.map((key, index) => (
+            <div key={key} className={`absolute inset-0 flex items-center justify-center pointer-events-none`}>
+              <PhaseContent data={storyline[key]} active={index === currentPhaseIndex} />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -236,8 +240,8 @@ const App: React.FC = () => {
   );
 };
 
-// Mount the application
-const container = document.getElementById('root');
-if (container) {
-  createRoot(container).render(<App />);
+// Start the Experience
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  ReactDOM.createRoot(rootElement).render(<App />);
 }
