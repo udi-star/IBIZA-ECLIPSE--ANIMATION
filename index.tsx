@@ -7,52 +7,58 @@ const PHASE_LABELS: Record<string, string> = {
   before: 'Anticipation',
   first_contact: 'The Arc',
   during_peak: 'Ascension',
-  totality: 'Silence',
+  totality: 'Totality',
   return_of_light: 'Renewal',
   afterglow: 'Eternal'
 };
 
-const DEFAULT_STORYLINE = {
-  before: { sentence: "The Ibiza shoreline waits in sun-drenched silence.", feeling: "Quiet, Gold", reflection: "What are you leaving behind in the day?" },
-  first_contact: { sentence: "A gentle shadow claims its first cosmic breath.", feeling: "Shift, Cool", reflection: "Can you feel the weight of the air changing?" },
-  during_peak: { sentence: "The familiar turns surreal as silver light descends.", feeling: "Ethereal, Pure", reflection: "In this half-light, who do you see beside you?" },
-  totality: { sentence: "Infinity reveals itself in a ring of fire.", feeling: "Absolute, Awe", reflection: "When the sun vanishes, what light remains within?" },
-  return_of_light: { sentence: "A single diamond spark restores the world.", feeling: "Birth, Clarity", reflection: "What will you build with this second dawn?" },
-  afterglow: { sentence: "The shadow leaves a mark the light cannot erase.", feeling: "Awake, Presence", reflection: "How will you speak of this to the stars?" }
+const DEFAULT_STORYLINE: any = {
+  before: { sentence: "Ibiza pulses with a warm, expectant glow.", feeling: "Quiet, Solar", reflection: "What intentions are you carrying into the shadow?" },
+  first_contact: { sentence: "A cosmic bite begins the silent transformation.", feeling: "Shift, Breath", reflection: "Can you feel the air cooling on your skin?" },
+  during_peak: { sentence: "Surreal silver light washes over the Mediterranean.", feeling: "Ethereal, Gold", reflection: "Who is sharing this half-lit world with you?" },
+  totality: { sentence: "The universe holds its breath in a ring of fire.", feeling: "Infinite, Absolute", reflection: "When the sun vanishes, what truth remains?" },
+  return_of_light: { sentence: "A diamond spark heralds the second dawn.", feeling: "Birth, Clarity", reflection: "What will you build with this restored light?" },
+  afterglow: { sentence: "The shadow leaves a golden mark upon the soul.", feeling: "Presence, Awake", reflection: "How will you speak of this to the future?" }
 };
 
 const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
   const moonOffset = (0.5 - progress) * 115;
-  const isTotality = progress > 0.485 && progress < 0.515;
-  const isNearTotality = progress > 0.43 && progress < 0.57;
+  const isTotality = progress > 0.49 && progress < 0.51;
+  const isNearTotality = progress > 0.44 && progress < 0.56;
   
   return (
-    <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center pointer-events-none select-none">
+    <div className="relative w-72 h-72 md:w-96 md:h-96 flex items-center justify-center pointer-events-none select-none">
+      {/* Atmosphere / Corona */}
       <div 
-        className="absolute w-56 h-56 md:w-72 md:h-72 rounded-full transition-all duration-1000 ease-out"
+        className="absolute w-64 h-64 md:w-80 md:h-80 rounded-full transition-all duration-1000 ease-out"
         style={{ 
           background: isNearTotality 
-            ? 'radial-gradient(circle, #fff 0%, #FFD700 30%, transparent 70%)'
-            : 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
-          filter: `blur(${isTotality ? '45px' : '20px'})`,
+            ? 'radial-gradient(circle, #fff 0%, #FFD700 35%, transparent 70%)'
+            : 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)',
+          filter: `blur(${isTotality ? '50px' : '20px'})`,
           opacity: isNearTotality ? 1 : 0.05,
-          transform: `scale(${isTotality ? 2.5 : 1.1})`
+          transform: `scale(${isTotality ? 2.6 : 1.15})`
         }}
       />
-      <div className={`absolute w-36 h-36 md:w-48 md:h-48 rounded-full bg-white transition-all duration-1000 ${isTotality ? 'gold-glow scale-105' : 'shadow-[0_0_50px_rgba(255,255,255,0.3)]'}`} />
+      {/* Sun Body */}
+      <div className={`absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-white transition-all duration-1000 ${isTotality ? 'totality-active scale-105' : 'shadow-[0_0_60px_rgba(255,255,255,0.3)]'}`} />
+      
+      {/* Moon Body */}
       <div 
-        className="absolute w-36 h-36 md:w-48 md:h-48 rounded-full bg-black transition-transform duration-200 ease-out"
+        className="absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-black transition-transform duration-200 ease-out"
         style={{ transform: `translateX(${moonOffset}%) scale(1.002)` }}
       />
+
+      {/* Diamond Ring Highlight */}
       <div 
-        className="absolute w-10 h-10 transition-opacity duration-700"
+        className="absolute w-12 h-12 transition-opacity duration-700"
         style={{ 
-          opacity: (progress > 0.475 && progress < 0.485) || (progress > 0.515 && progress < 0.525) ? 1 : 0,
-          top: '20%', right: '28%'
+          opacity: (progress > 0.48 && progress < 0.49) || (progress > 0.51 && progress < 0.52) ? 1 : 0,
+          top: '18%', right: '28%'
         }}
       >
         <div className="absolute inset-0 bg-white rounded-full blur-md animate-pulse" />
-        <div className="absolute inset-0 bg-yellow-200 rounded-full scale-150 blur-xl opacity-40" />
+        <div className="absolute inset-0 bg-yellow-100 rounded-full scale-150 blur-2xl opacity-50" />
       </div>
     </div>
   );
@@ -64,8 +70,8 @@ const App: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   
-  const stars = useMemo(() => Array.from({ length: 40 }).map((_, i) => ({
-    top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, size: `${Math.random() * 2 + 1}px`, delay: `${Math.random() * 5}s`
+  const stars = useMemo(() => Array.from({ length: 60 }).map((_, i) => ({
+    top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, size: `${Math.random() * 2 + 0.5}px`, delay: `${Math.random() * 5}s`
   })), []);
 
   useEffect(() => {
@@ -79,7 +85,8 @@ const App: React.FC = () => {
     const animate = (time: number) => {
       if (isPlaying) {
         const delta = time - lastTime;
-        const speed = (progress > 0.46 && progress < 0.54) ? 0.00002 : 0.00005;
+        // CINEMATIC SPEED: Slower near totality
+        const speed = (progress > 0.47 && progress < 0.53) ? 0.000015 : 0.000045;
         setProgress(p => {
           const next = p + delta * speed;
           return next > 1 ? 0 : next;
@@ -98,14 +105,14 @@ const App: React.FC = () => {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
         const response = await ai.models.generateContent({
           model: 'gemini-3-flash-preview',
-          contents: 'Poetic narrative for Ibiza Total Solar.',
+          contents: 'Narrative for Ibiza Solar eclipse experience.',
           config: {
-            systemInstruction: 'Luxury experience designer. 6 phases: Anticipation, Shift, Ascension, Totality, Renewal, Afterglow. Sentence (White, 12 words max), Feeling (Gold, 2 words), Reflection (Yellow, 1 question).',
+            systemInstruction: 'Luxury storyteller. 6 phases: Anticipation, First Contact, Peak, Totality, Return, Afterglow. Sentence (White, 12 words max), Feeling (Gold, 2 words), Reflection (Yellow, 1 question).',
             responseMimeType: "application/json"
           }
         });
         if (response.text) setStoryline(JSON.parse(response.text));
-      } catch (e) { console.debug("Using fallback narrative"); }
+      } catch (e) { console.debug("AI narrative failed, using high-end defaults."); }
     };
     fetchAI();
   }, []);
@@ -120,22 +127,29 @@ const App: React.FC = () => {
 
       <header className="p-8 md:p-12 flex justify-between items-center z-20">
         <div className="flex flex-col">
-          <h1 className="serif text-white text-xl tracking-[0.5em] uppercase font-light">Ibiza</h1>
-          <span className="text-[9px] tracking-[0.8em] text-yellow-500 uppercase font-bold mt-1">Total Solar</span>
+          <h1 className="serif text-white text-2xl tracking-[0.4em] uppercase font-light">Ibiza</h1>
+          <span className="text-[10px] tracking-[0.8em] text-yellow-500 uppercase font-bold mt-1">Total Solar</span>
         </div>
         <button 
           onClick={() => setIsPlaying(!isPlaying)}
-          className="flex items-center space-x-3 text-[10px] uppercase tracking-[0.4em] text-white/40 hover:text-white transition-all group"
+          className="flex items-center space-x-4 text-[11px] uppercase tracking-[0.4em] text-white hover:text-yellow-400 transition-all group"
         >
-          <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/30">
-            {isPlaying ? <span className="block w-2 h-2 bg-white" /> : <div className="ml-1 w-0 h-0 border-t-4 border-t-transparent border-l-8 border-l-white border-b-4 border-b-transparent" />}
+          <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:border-yellow-500/50 group-hover:bg-yellow-500/5">
+            {isPlaying ? (
+              <div className="flex space-x-1">
+                <div className="w-1 h-3 bg-white group-hover:bg-yellow-500" />
+                <div className="w-1 h-3 bg-white group-hover:bg-yellow-500" />
+              </div>
+            ) : (
+              <div className="ml-1 w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white group-hover:border-l-yellow-500 border-b-[6px] border-b-transparent" />
+            )}
           </div>
-          <span className="hidden sm:inline">{isPlaying ? 'Autoplay On' : 'Autoplay Off'}</span>
+          <span className="hidden sm:inline font-semibold">{isPlaying ? 'Autoplay On' : 'Autoplay Off'}</span>
         </button>
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6">
-        <div className="mb-8 transition-transform duration-[1500ms]" style={{ transform: `scale(${1 + (progress > 0.45 && progress < 0.55 ? 0.15 : 0)})` }}>
+        <div className="mb-6 transition-transform duration-[2000ms]" style={{ transform: `scale(${1 + (progress > 0.45 && progress < 0.55 ? 0.12 : 0)})` }}>
           <EclipseVisual progress={progress} />
         </div>
 
@@ -143,19 +157,19 @@ const App: React.FC = () => {
           {PHASES.map((key, index) => (
             <div 
               key={key} 
-              className={`absolute transition-text flex flex-col items-center pointer-events-none ${index === currentPhaseIndex ? 'opacity-100 translate-y-0 scale-100 filter-none' : 'opacity-0 translate-y-8 scale-95 blur-xl'}`}
+              className={`absolute fade-in flex flex-col items-center pointer-events-none ${index === currentPhaseIndex ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-90 blur-2xl'}`}
             >
-              <h2 className="serif text-white text-3xl md:text-5xl mb-6 leading-tight tracking-wide font-light drop-shadow-2xl">
+              <h2 className="serif text-white text-4xl md:text-6xl mb-8 leading-tight tracking-wide font-light drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
                 {storyline[key].sentence}
               </h2>
-              <div className="flex items-center space-x-6 mb-8">
+              <div className="flex items-center space-x-6 mb-10">
                 {storyline[key].feeling.split(',').map((f: string, i: number) => (
-                  <span key={i} className="text-[10px] uppercase tracking-[0.5em] text-yellow-500 font-bold px-3 py-1 border border-yellow-500/20 rounded-full">
+                  <span key={i} className="text-[11px] uppercase tracking-[0.6em] text-yellow-500 font-bold px-5 py-1.5 border border-yellow-500/30 rounded-full bg-yellow-500/5">
                     {f.trim()}
                   </span>
                 ))}
               </div>
-              <p className="text-yellow-100/60 italic font-light text-lg md:text-xl max-w-sm mx-auto leading-relaxed border-t border-white/5 pt-6">
+              <p className="text-yellow-100/70 italic font-light text-xl md:text-2xl max-w-sm mx-auto leading-relaxed pt-8 border-t border-white/10">
                 {storyline[key].reflection}
               </p>
             </div>
@@ -163,30 +177,32 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <footer className="p-8 md:p-12 z-20 w-full max-w-5xl mx-auto">
-        <div className="flex justify-between mb-8 px-2 overflow-x-auto no-scrollbar space-x-4">
+      <footer className="p-10 md:p-16 z-20 w-full max-w-5xl mx-auto">
+        <div className="flex justify-between mb-10 px-4 overflow-x-auto no-scrollbar space-x-6">
           {PHASES.map((key, index) => (
             <button 
               key={key}
               onClick={() => { setProgress(index / (PHASES.length - 1)); setIsPlaying(false); }}
-              className={`text-[9px] uppercase tracking-[0.5em] transition-all duration-700 whitespace-nowrap ${index === currentPhaseIndex ? 'text-white font-bold' : 'text-white/20'}`}
+              className={`text-[10px] uppercase tracking-[0.5em] transition-all duration-700 whitespace-nowrap ${index === currentPhaseIndex ? 'text-white font-bold scale-110' : 'text-white/20 hover:text-white/50'}`}
             >
               {PHASE_LABELS[key]}
             </button>
           ))}
         </div>
-        <div className="relative h-[1px] w-full bg-white/10 group">
+        
+        <div className="relative h-[2px] w-full bg-white/10 group">
           <input 
             type="range" min="0" max="1" step="0.0001" value={progress} 
             onInput={(e) => { setProgress(parseFloat((e.target as HTMLInputElement).value)); setIsPlaying(false); }}
-            className="absolute -top-5 w-full h-10 opacity-0 cursor-pointer z-50"
+            className="absolute -top-6 w-full h-12 opacity-0 cursor-pointer z-50"
           />
-          <div className="absolute h-full bg-yellow-500 transition-all duration-300 shadow-[0_0_10px_#f59e0b]" style={{ width: `${progress * 100}%` }} />
-          <div className="absolute w-3 h-3 bg-white rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none shadow-[0_0_15px_#fff]" style={{ left: `${progress * 100}%` }} />
+          <div className="absolute h-full bg-yellow-500 transition-all duration-300 shadow-[0_0_20px_#f59e0b]" style={{ width: `${progress * 100}%` }} />
+          <div className="absolute w-4 h-4 bg-white rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none shadow-[0_0_20px_#fff] transition-transform group-hover:scale-125" style={{ left: `${progress * 100}%` }} />
         </div>
-        <div className="mt-8 flex justify-between items-center opacity-20 text-[7px] uppercase tracking-[1em]">
-          <span>Witness the alignment</span>
-          <span>Infinity Loop</span>
+        
+        <div className="mt-10 flex justify-between items-center opacity-30 text-[8px] uppercase tracking-[1.2em] font-medium">
+          <span>Alignment Cycle</span>
+          <span className="animate-pulse">{isPlaying ? 'Synchronizing' : 'Paused'}</span>
         </div>
       </footer>
     </div>
