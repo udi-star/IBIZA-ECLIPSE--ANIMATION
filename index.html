@@ -15,42 +15,94 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script>
-        // Prevent crashes if some library checks for process.env
+        // Ensure process.env.API_KEY is available for the SDK
         window.process = { env: { API_KEY: "" } };
     </script>
 
     <style>
-        body { background: #000; color: #fff; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; }
-        .serif { font-family: 'Playfair Display', serif; }
-        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; cursor: pointer; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 40px; width: 40px; background: transparent; }
-        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.3; pointer-events: none; }
-        @keyframes gold-pulse {
-            0%, 100% { filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.3)); }
-            50% { filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.7)); }
+        body { 
+            background: #000; 
+            color: #fff; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            overflow: hidden; 
+            -webkit-tap-highlight-color: transparent; 
         }
-        .totality-glow { animation: gold-pulse 4s infinite ease-in-out; }
+        .serif { font-family: 'Playfair Display', serif; }
+        
+        input[type=range] { 
+            -webkit-appearance: none; 
+            background: transparent; 
+            width: 100%; 
+            cursor: pointer; 
+        }
+        input[type=range]::-webkit-slider-thumb { 
+            -webkit-appearance: none; 
+            height: 48px; 
+            width: 48px; 
+            background: transparent; 
+        }
+        
+        .star { 
+            position: absolute; 
+            background: white; 
+            border-radius: 50%; 
+            opacity: 0.3; 
+            pointer-events: none; 
+        }
+        
+        @keyframes gold-pulse {
+            0%, 100% { 
+              filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4)) blur(2px);
+              transform: scale(1);
+            }
+            50% { 
+              filter: drop-shadow(0 0 50px rgba(255, 215, 0, 0.8)) blur(0px);
+              transform: scale(1.02);
+            }
+        }
+        .totality-glow { animation: gold-pulse 6s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        @keyframes content-fade-in {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-content { animation: content-fade-in 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .luxury-ease { transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1); }
     </style>
 <script type="importmap">
 {
   "imports": {
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
-    "react": "https://esm.sh/react@^19.2.4"
+    "react/": "https://esm.sh/react@^19.2.4/"
   }
 }
 </script>
 </head>
 <body>
     <div id="root"></div>
-    <!-- Babel compiles the TSX directly in the browser, bypassing MIME type issues -->
     <script type="text/babel" src="index.tsx" data-presets="react,typescript"></script>
     <script>
+        // Defensive Service Worker Registration to handle origin mismatches in preview environments
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(() => {});
+                // Determine the correct path relative to the current script's origin
+                const swPath = './sw.js';
+                navigator.serviceWorker.register(swPath)
+                    .then(registration => {
+                        console.log('SW registered successfully:', registration.scope);
+                    })
+                    .catch(err => {
+                        // Log a warning instead of a blocking error if it's an origin mismatch (common in sandboxes)
+                        if (err.message.includes('origin')) {
+                            console.warn('Service Worker registration skipped: Origin mismatch (Expected in some preview environments).');
+                        } else {
+                            console.error('Service Worker registration failed:', err);
+                        }
+                    });
             });
         }
     </script>
