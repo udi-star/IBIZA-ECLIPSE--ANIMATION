@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'https://esm.sh/react@19.0.0';
-import ReactDOM from 'https://esm.sh/react-dom@19.0.0/client';
+import { createRoot } from 'https://esm.sh/react-dom@19.0.0/client';
 import { GoogleGenAI, Type } from "https://esm.sh/@google/genai@1.40.0";
 
 // --- Configuration & Constants ---
 const PHASES = ['before', 'first_contact', 'during_peak', 'totality', 'return_of_light', 'afterglow'];
 const PHASE_LABELS: Record<string, string> = {
   before: 'Anticipation',
-  first_contact: 'The Arc',
+  first_contact: 'Transformation',
   during_peak: 'Ascension',
   totality: 'Totality',
   return_of_light: 'Renewal',
@@ -25,32 +25,32 @@ const DEFAULT_STORYLINE: any = {
 // --- Component: EclipseVisual ---
 const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
   const moonOffset = (0.5 - progress) * 115;
-  const isTotality = progress > 0.49 && progress < 0.51;
+  const isTotality = progress > 0.496 && progress < 0.504;
   const isNearTotality = progress > 0.44 && progress < 0.56;
   
   return (
-    <div className="relative w-72 h-72 md:w-96 md:h-96 flex items-center justify-center pointer-events-none select-none transition-transform duration-1000">
+    <div className="relative w-72 h-72 md:w-96 md:h-96 flex items-center justify-center pointer-events-none select-none">
       <div 
         className="absolute w-64 h-64 md:w-80 md:h-80 rounded-full transition-all duration-1000 ease-out"
         style={{ 
           background: isNearTotality 
             ? 'radial-gradient(circle, #fff 0%, #FFD700 35%, transparent 70%)'
             : 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)',
-          filter: `blur(${isTotality ? '50px' : '20px'})`,
+          filter: `blur(${isTotality ? '65px' : '20px'})`,
           opacity: isNearTotality ? 1 : 0.05,
-          transform: `scale(${isTotality ? 2.6 : 1.15})`
+          transform: `scale(${isTotality ? 2.8 : 1.15})`
         }}
       />
-      <div className={`absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-white transition-all duration-1000 ${isTotality ? 'totality-glow scale-105' : 'shadow-[0_0_60px_rgba(255,255,255,0.3)]'}`} />
+      <div className={`absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-white transition-all duration-1000 ${isTotality ? 'totality-glow scale-105 shadow-[0_0_100px_#fff]' : 'shadow-[0_0_60px_rgba(255,255,255,0.3)]'}`} />
       <div 
-        className="absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-black transition-transform duration-200 ease-out"
-        style={{ transform: `translateX(${moonOffset}%) scale(1.002)` }}
+        className="absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-black transition-transform duration-150 ease-out border border-white/5"
+        style={{ transform: `translateX(${moonOffset}%) scale(1.005)` }}
       />
       <div 
-        className="absolute w-12 h-12 transition-opacity duration-700"
+        className="absolute w-14 h-14 transition-opacity duration-700"
         style={{ 
-          opacity: (progress > 0.485 && progress < 0.495) || (progress > 0.505 && progress < 0.515) ? 1 : 0,
-          top: '18%', right: '28%'
+          opacity: (progress > 0.488 && progress < 0.493) || (progress > 0.507 && progress < 0.512) ? 1 : 0,
+          top: '15%', right: '25%'
         }}
       >
         <div className="absolute inset-0 bg-white rounded-full blur-md animate-pulse" />
@@ -60,36 +60,15 @@ const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
   );
 };
 
-// --- Component: PhaseContent ---
-const PhaseContent: React.FC<{ data: any, active: boolean }> = ({ data, active }) => {
-  return (
-    <div className={`flex flex-col items-center text-center phase-transition ${active ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12 blur-md'}`}>
-      <h2 className="serif text-white text-4xl md:text-5xl lg:text-6xl mb-8 leading-tight tracking-wide font-light drop-shadow-2xl px-4">
-        {data.sentence}
-      </h2>
-      <div className="flex items-center space-x-6 mb-10">
-        {data.feeling.split(',').map((f: string, i: number) => (
-          <span key={i} className="text-[10px] uppercase tracking-[0.6em] text-yellow-500 font-bold px-5 py-1.5 border border-yellow-500/30 rounded-full bg-yellow-500/5">
-            {f.trim()}
-          </span>
-        ))}
-      </div>
-      <p className="text-yellow-100/70 italic font-light text-xl md:text-2xl max-w-sm mx-auto leading-relaxed pt-8 border-t border-white/10 px-6">
-        {data.reflection}
-      </p>
-    </div>
-  );
-};
-
-// --- Main Application ---
+// --- Component: Main Application ---
 const App: React.FC = () => {
   const [storyline, setStoryline] = useState<any>(DEFAULT_STORYLINE);
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   
-  const stars = useMemo(() => Array.from({ length: 60 }).map((_, i) => ({
-    top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, size: `${Math.random() * 2 + 0.5}px`, delay: `${Math.random() * 5}s`
+  const stars = useMemo(() => Array.from({ length: 80 }).map((_, i) => ({
+    top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, size: `${Math.random() * 1.5 + 0.5}px`, delay: `${Math.random() * 5}s`
   })), []);
 
   useEffect(() => {
@@ -103,9 +82,12 @@ const App: React.FC = () => {
     const animate = (time: number) => {
       if (isPlaying) {
         const delta = time - lastTime;
-        const speed = (progress > 0.47 && progress < 0.53) ? 0.000015 : 0.000045;
+        const proximity = Math.abs(0.5 - progress);
+        const speedMultiplier = proximity < 0.05 ? 0.35 : 1;
+        const baseSpeed = 0.000045;
+        
         setProgress(p => {
-          const next = p + delta * speed;
+          const next = p + delta * baseSpeed * speedMultiplier;
           return next > 1 ? 0 : next;
         });
       }
@@ -118,53 +100,37 @@ const App: React.FC = () => {
 
   const fetchAI = useCallback(async () => {
     try {
-      const apiKey = (window as any).process?.env?.API_KEY || "";
+      const apiKey = (window as any).process?.env?.API_KEY;
       if (!apiKey) return;
 
       const ai = new GoogleGenAI({ apiKey });
-      const phaseSchema = {
-        type: Type.OBJECT,
-        properties: {
-          sentence: { type: Type.STRING },
-          feeling: { type: Type.STRING },
-          reflection: { type: Type.STRING }
-        },
-        required: ["sentence", "feeling", "reflection"]
-      };
-
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: 'Create premium poetic content for Ibiza Solar. Use exactly 6 phases.',
+        contents: 'Generate 6 poetic phases for Ibiza Total Solar glasses. Order: before, first_contact, during_peak, totality, return_of_light, afterglow.',
         config: {
-          systemInstruction: 'Luxury experience designer for "Ibiza Total Solar". 6 phases. Premium, minimal, poetic.',
+          systemInstruction: 'Luxury experience designer for "Ibiza Total Solar". 6 phases. Premium, minimal, poetic. Each phase needs: sentence (short), feeling (2 tags), reflection (question).',
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
             properties: {
-              before: phaseSchema,
-              first_contact: phaseSchema,
-              during_peak: phaseSchema,
-              totality: phaseSchema,
-              return_of_light: phaseSchema,
-              afterglow: phaseSchema
-            },
-            required: PHASES
+              before: { type: Type.OBJECT, properties: { sentence: {type: Type.STRING}, feeling: {type: Type.STRING}, reflection: {type: Type.STRING} } },
+              first_contact: { type: Type.OBJECT, properties: { sentence: {type: Type.STRING}, feeling: {type: Type.STRING}, reflection: {type: Type.STRING} } },
+              during_peak: { type: Type.OBJECT, properties: { sentence: {type: Type.STRING}, feeling: {type: Type.STRING}, reflection: {type: Type.STRING} } },
+              totality: { type: Type.OBJECT, properties: { sentence: {type: Type.STRING}, feeling: {type: Type.STRING}, reflection: {type: Type.STRING} } },
+              return_of_light: { type: Type.OBJECT, properties: { sentence: {type: Type.STRING}, feeling: {type: Type.STRING}, reflection: {type: Type.STRING} } },
+              afterglow: { type: Type.OBJECT, properties: { sentence: {type: Type.STRING}, feeling: {type: Type.STRING}, reflection: {type: Type.STRING} } }
+            }
           }
         }
       });
-      if (response.text) {
-        const parsed = JSON.parse(response.text);
-        setStoryline(parsed);
-      }
-    } catch (e) {
-      console.warn("AI Load skipped/failed, using high-end defaults.");
-    }
+      if (response.text) setStoryline(JSON.parse(response.text));
+    } catch (e) { console.warn("AI narrative fetch failed, using poetic defaults."); }
   }, []);
 
   useEffect(() => { fetchAI(); }, [fetchAI]);
 
   return (
-    <div className="h-screen w-full flex flex-col justify-between overflow-hidden relative">
+    <div className="h-screen w-full flex flex-col justify-between overflow-hidden relative select-none">
       <div className="stars-container">
         {stars.map((s, i) => (
           <div key={i} className="star animate-pulse" style={{ top: s.top, left: s.left, width: s.size, height: s.size, animationDelay: s.delay }} />
@@ -182,29 +148,44 @@ const App: React.FC = () => {
         >
           <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center group-hover:border-yellow-500/50 group-hover:bg-yellow-500/5 transition-all">
             {isPlaying ? (
-              <div className="flex space-x-1">
-                <div className="w-1 h-3 bg-white group-hover:bg-yellow-500" />
-                <div className="w-1 h-3 bg-white group-hover:bg-yellow-500" />
-              </div>
+              <div className="flex space-x-1"><div className="w-1 h-3 bg-white" /><div className="w-1 h-3 bg-white" /></div>
             ) : (
-              <div className="ml-1 w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white group-hover:border-l-yellow-500 border-b-[6px] border-b-transparent" />
+              <div className="ml-1 w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white border-b-[6px] border-b-transparent" />
             )}
           </div>
-          <span className="hidden sm:inline font-semibold tracking-[0.4em]">{isPlaying ? 'Autoplay On' : 'Autoplay Off'}</span>
+          <span className="hidden sm:inline font-semibold tracking-[0.4em]">{isPlaying ? 'Autoplay' : 'Manual'}</span>
         </button>
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center relative">
-        <div className="mb-4 transition-transform duration-[2000ms]" style={{ transform: `scale(${1 + (progress > 0.45 && progress < 0.55 ? 0.12 : 0)})` }}>
+        <div className="mb-6 transition-transform duration-[2000ms]" style={{ transform: `scale(${1 + (progress > 0.46 && progress < 0.54 ? 0.15 : 0)})` }}>
           <EclipseVisual progress={progress} />
         </div>
 
-        <div className="relative w-full max-w-2xl text-center flex items-center justify-center h-[320px]">
-          {PHASES.map((key, index) => (
-            <div key={key} className={`absolute inset-0 flex items-center justify-center pointer-events-none`}>
-              <PhaseContent data={storyline[key]} active={index === currentPhaseIndex} />
-            </div>
-          ))}
+        <div className="relative w-full max-w-2xl text-center min-h-[300px] flex items-center justify-center px-10">
+          {PHASES.map((key, index) => {
+            const data = storyline[key] || DEFAULT_STORYLINE[key];
+            return (
+              <div 
+                key={key} 
+                className={`absolute phase-transition flex flex-col items-center pointer-events-none ${index === currentPhaseIndex ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-90 blur-xl'}`}
+              >
+                <h2 className="serif text-white text-3xl md:text-5xl mb-8 leading-tight tracking-wide font-light drop-shadow-2xl">
+                  {data.sentence}
+                </h2>
+                <div className="flex items-center space-x-5 mb-10">
+                  {data.feeling.split(',').map((f: string, i: number) => (
+                    <span key={i} className="text-[9px] uppercase tracking-[0.5em] text-yellow-500 font-bold px-4 py-1.5 border border-yellow-500/20 rounded-full bg-yellow-500/5 shadow-[0_0_10px_rgba(234,179,8,0.1)]">
+                      {f.trim()}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-yellow-100/60 italic font-light text-lg md:text-xl max-w-sm mx-auto border-t border-white/5 pt-8 leading-relaxed">
+                  {data.reflection}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -214,7 +195,7 @@ const App: React.FC = () => {
             <button 
               key={key}
               onClick={() => { setProgress(index / (PHASES.length - 1)); setIsPlaying(false); }}
-              className={`text-[9px] uppercase tracking-[0.5em] transition-all duration-700 whitespace-nowrap ${index === currentPhaseIndex ? 'text-white font-bold scale-110' : 'text-white/20 hover:text-white/50'}`}
+              className={`text-[9px] uppercase tracking-[0.5em] transition-all duration-700 whitespace-nowrap ${index === currentPhaseIndex ? 'text-white font-bold scale-110 translate-y-[-2px]' : 'text-white/20 hover:text-white/50'}`}
             >
               {PHASE_LABELS[key]}
             </button>
@@ -228,20 +209,18 @@ const App: React.FC = () => {
             className="absolute -top-6 w-full h-12 opacity-0 cursor-pointer z-50"
           />
           <div className="absolute h-full bg-yellow-500 transition-all duration-300 shadow-[0_0_20px_#f59e0b]" style={{ width: `${progress * 100}%` }} />
-          <div className="absolute w-4 h-4 bg-white rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none shadow-[0_0_20px_#fff] transition-transform group-hover:scale-125" style={{ left: `${progress * 100}%` }} />
+          <div className="absolute w-4 h-4 bg-white rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none shadow-[0_0_15px_#fff] transition-transform group-hover:scale-125" style={{ left: `${progress * 100}%` }} />
         </div>
         
-        <div className="mt-10 flex justify-between items-center opacity-30 text-[8px] uppercase tracking-[1.2em] font-medium">
-          <span>Alignment Cycle</span>
-          <span className="animate-pulse">{isPlaying ? 'Synchronizing' : 'Paused'}</span>
+        <div className="mt-10 flex justify-center opacity-20 text-[7px] uppercase tracking-[1.5em] font-medium text-center">
+          <span>Orbital Synchronization</span>
         </div>
       </footer>
     </div>
   );
 };
 
-// Start the Experience
 const rootElement = document.getElementById('root');
 if (rootElement) {
-  ReactDOM.createRoot(rootElement).render(<App />);
+  createRoot(rootElement).render(<App />);
 }
