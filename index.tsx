@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ReactDOM from 'react-dom/client';
 import { GoogleGenAI, Type } from "@google/genai";
 
+// --- Configuration & Types ---
 const PHASES = ['before', 'first_contact', 'during_peak', 'totality', 'return_of_light', 'afterglow'];
 const PHASE_LABELS: Record<string, string> = {
   before: 'Anticipation',
@@ -21,13 +22,14 @@ const DEFAULT_STORYLINE: any = {
   afterglow: { sentence: "The shadow leaves a golden mark upon the soul.", feeling: "Presence, Awake", reflection: "How will you speak of this to the future?" }
 };
 
+// --- Sub-Components ---
 const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
   const moonOffset = (0.5 - progress) * 115;
   const isTotality = progress > 0.49 && progress < 0.51;
   const isNearTotality = progress > 0.44 && progress < 0.56;
   
   return (
-    <div className="relative w-72 h-72 md:w-96 md:h-96 flex items-center justify-center pointer-events-none select-none">
+    <div className="relative w-72 h-72 md:w-96 md:h-96 flex items-center justify-center pointer-events-none select-none transition-transform duration-1000">
       <div 
         className="absolute w-64 h-64 md:w-80 md:h-80 rounded-full transition-all duration-1000 ease-out"
         style={{ 
@@ -39,7 +41,7 @@ const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
           transform: `scale(${isTotality ? 2.6 : 1.15})`
         }}
       />
-      <div className={`absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-white transition-all duration-1000 ${isTotality ? 'totality-active scale-105' : 'shadow-[0_0_60px_rgba(255,255,255,0.3)]'}`} />
+      <div className={`absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-white transition-all duration-1000 ${isTotality ? 'totality-glow scale-105' : 'shadow-[0_0_60px_rgba(255,255,255,0.3)]'}`} />
       <div 
         className="absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-black transition-transform duration-200 ease-out"
         style={{ transform: `translateX(${moonOffset}%) scale(1.002)` }}
@@ -47,7 +49,7 @@ const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
       <div 
         className="absolute w-12 h-12 transition-opacity duration-700"
         style={{ 
-          opacity: (progress > 0.48 && progress < 0.49) || (progress > 0.51 && progress < 0.52) ? 1 : 0,
+          opacity: (progress > 0.485 && progress < 0.495) || (progress > 0.505 && progress < 0.515) ? 1 : 0,
           top: '18%', right: '28%'
         }}
       >
@@ -58,6 +60,7 @@ const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
   );
 };
 
+// --- Main Application ---
 const App: React.FC = () => {
   const [storyline, setStoryline] = useState<any>(DEFAULT_STORYLINE);
   const [progress, setProgress] = useState(0);
@@ -79,7 +82,8 @@ const App: React.FC = () => {
     const animate = (time: number) => {
       if (isPlaying) {
         const delta = time - lastTime;
-        const speed = (progress > 0.47 && progress < 0.53) ? 0.000015 : 0.000045;
+        // Cinematic Slow-mo near totality
+        const speed = (progress > 0.47 && progress < 0.53) ? 0.000018 : 0.00005;
         setProgress(p => {
           const next = p + delta * speed;
           return next > 1 ? 0 : next;
@@ -92,55 +96,47 @@ const App: React.FC = () => {
     return () => cancelAnimationFrame(frame);
   }, [isPlaying, progress]);
 
-  useEffect(() => {
-    const fetchAI = async () => {
-      try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
-        
-        const phaseSchema = {
-          type: Type.OBJECT,
-          properties: {
-            sentence: { type: Type.STRING },
-            feeling: { type: Type.STRING },
-            reflection: { type: Type.STRING }
-          },
-          required: ["sentence", "feeling", "reflection"]
-        };
+  const fetchAI = useCallback(async () => {
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+      const phaseSchema = {
+        type: Type.OBJECT,
+        properties: {
+          sentence: { type: Type.STRING },
+          feeling: { type: Type.STRING },
+          reflection: { type: Type.STRING }
+        },
+        required: ["sentence", "feeling", "reflection"]
+      };
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
-          contents: 'Generate luxury poetic content for the Ibiza Solar experience. Ensure you use the exact keys: before, first_contact, during_peak, totality, return_of_light, afterglow.',
-          config: {
-            systemInstruction: 'You are a luxury experience designer. Create 6 phases of an eclipse. Tone is quiet, minimal, and premium. Sentence (White theme, max 12 words), Feeling (Gold theme, 2 keywords), Reflection (Yellow theme, 1 gentle question).',
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                before: phaseSchema,
-                first_contact: phaseSchema,
-                during_peak: phaseSchema,
-                totality: phaseSchema,
-                return_of_light: phaseSchema,
-                afterglow: phaseSchema
-              },
-              required: PHASES
-            }
-          }
-        });
-
-        if (response.text) {
-          const parsed = JSON.parse(response.text);
-          // Only update if all required keys are present to prevent crashes
-          if (PHASES.every(key => parsed[key])) {
-            setStoryline(parsed);
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: 'Create premium poetic content for Ibiza Solar. Use exactly 6 phases.',
+        config: {
+          systemInstruction: 'Luxury experience designer. 6 phases: before, first_contact, during_peak, totality, return_of_light, afterglow. Minimal, premium tone.',
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              before: phaseSchema,
+              first_contact: phaseSchema,
+              during_peak: phaseSchema,
+              totality: phaseSchema,
+              return_of_light: phaseSchema,
+              afterglow: phaseSchema
+            },
+            required: PHASES
           }
         }
-      } catch (e) { 
-        console.warn("AI narrative failed or formatted incorrectly, staying with defaults.", e); 
+      });
+      if (response.text) {
+        const parsed = JSON.parse(response.text);
+        if (PHASES.every(k => parsed[k])) setStoryline(parsed);
       }
-    };
-    fetchAI();
+    } catch (e) { console.warn("AI narrative failed, using high-end defaults.", e); }
   }, []);
+
+  useEffect(() => { fetchAI(); }, [fetchAI]);
 
   return (
     <div className="h-screen w-full flex flex-col justify-between overflow-hidden relative">
@@ -169,7 +165,7 @@ const App: React.FC = () => {
               <div className="ml-1 w-0 h-0 border-t-[6px] border-t-transparent border-l-[10px] border-l-white group-hover:border-l-yellow-500 border-b-[6px] border-b-transparent" />
             )}
           </div>
-          <span className="hidden sm:inline font-semibold">{isPlaying ? 'Autoplay On' : 'Autoplay Off'}</span>
+          <span className="hidden sm:inline font-semibold tracking-[0.4em]">{isPlaying ? 'Autoplay On' : 'Autoplay Off'}</span>
         </button>
       </header>
 
@@ -180,24 +176,24 @@ const App: React.FC = () => {
 
         <div className="relative w-full max-w-2xl text-center min-h-[300px] flex items-center justify-center">
           {PHASES.map((key, index) => {
-            const phaseData = storyline[key] || DEFAULT_STORYLINE[key];
+            const data = storyline[key] || DEFAULT_STORYLINE[key];
             return (
               <div 
                 key={key} 
-                className={`absolute fade-in flex flex-col items-center pointer-events-none ${index === currentPhaseIndex ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-90 blur-2xl'}`}
+                className={`absolute phase-transition flex flex-col items-center pointer-events-none ${index === currentPhaseIndex ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-90 blur-2xl'}`}
               >
-                <h2 className="serif text-white text-4xl md:text-6xl mb-8 leading-tight tracking-wide font-light drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
-                  {phaseData?.sentence}
+                <h2 className="serif text-white text-4xl md:text-5xl lg:text-6xl mb-8 leading-tight tracking-wide font-light drop-shadow-2xl">
+                  {data?.sentence}
                 </h2>
                 <div className="flex items-center space-x-6 mb-10">
-                  {phaseData?.feeling?.split(',').map((f: string, i: number) => (
-                    <span key={i} className="text-[11px] uppercase tracking-[0.6em] text-yellow-500 font-bold px-5 py-1.5 border border-yellow-500/30 rounded-full bg-yellow-500/5">
+                  {data?.feeling?.split(',').map((f: string, i: number) => (
+                    <span key={i} className="text-[10px] uppercase tracking-[0.6em] text-yellow-500 font-bold px-5 py-1.5 border border-yellow-500/30 rounded-full bg-yellow-500/5">
                       {f.trim()}
                     </span>
                   ))}
                 </div>
                 <p className="text-yellow-100/70 italic font-light text-xl md:text-2xl max-w-sm mx-auto leading-relaxed pt-8 border-t border-white/10">
-                  {phaseData?.reflection}
+                  {data?.reflection}
                 </p>
               </div>
             );
@@ -211,7 +207,7 @@ const App: React.FC = () => {
             <button 
               key={key}
               onClick={() => { setProgress(index / (PHASES.length - 1)); setIsPlaying(false); }}
-              className={`text-[10px] uppercase tracking-[0.5em] transition-all duration-700 whitespace-nowrap ${index === currentPhaseIndex ? 'text-white font-bold scale-110' : 'text-white/20 hover:text-white/50'}`}
+              className={`text-[9px] uppercase tracking-[0.5em] transition-all duration-700 whitespace-nowrap ${index === currentPhaseIndex ? 'text-white font-bold scale-110' : 'text-white/20 hover:text-white/50'}`}
             >
               {PHASE_LABELS[key]}
             </button>
@@ -237,5 +233,5 @@ const App: React.FC = () => {
   );
 };
 
-const rootElement = document.getElementById('root');
-if (rootElement) { ReactDOM.createRoot(rootElement).render(<App />); }
+const root = ReactDOM.createRoot(document.getElementById('root')!);
+root.render(<App />);

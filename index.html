@@ -12,15 +12,14 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2530/2530880.png">
 
-    <!-- Styles & Fonts -->
+    <!-- Styles -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
-    <!-- Babel Standalone: This allows index.tsx to work on GitHub Pages -->
+    <!-- Babel Standalone for GitHub Pages -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        :root { --solar-gold: #FFD700; }
         body {
             background-color: #000;
             color: #fff;
@@ -31,15 +30,11 @@
         }
         .serif { font-family: 'Playfair Display', serif; }
         
-        input[type=range] {
-            -webkit-appearance: none;
-            background: transparent;
-            width: 100%;
-        }
+        /* Custom range slider styling */
+        input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 48px;
-            width: 48px;
+            height: 48px; width: 48px;
             background: transparent;
             cursor: pointer;
         }
@@ -50,23 +45,18 @@
             background: radial-gradient(circle at 50% 50%, #0c0c0c 0%, #000 100%);
             z-index: -1;
         }
-        .star {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.3;
-        }
+        .star { position: absolute; background: white; border-radius: 50%; opacity: 0.3; }
 
         @keyframes gold-pulse {
             0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.4)); }
             50% { filter: drop-shadow(0 0 50px rgba(255, 215, 0, 0.8)); }
         }
-        .totality-active { animation: gold-pulse 4s infinite ease-in-out; }
+        .totality-glow { animation: gold-pulse 4s infinite ease-in-out; }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .fade-in { transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .phase-transition { transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
     </style>
 
     <script type="importmap">
@@ -83,12 +73,11 @@
 </head>
 <body>
     <div id="root"></div>
-    <!-- Note the type="text/babel" and data-type="module" -->
     <script type="text/babel" data-type="module" src="index.tsx"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(e => console.log('SW error', e));
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed', err));
             });
         }
     </script>
