@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ReactDOM from 'react-dom/client';
 import { GoogleGenAI, Type } from "@google/genai";
 
@@ -28,7 +28,6 @@ const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
   
   return (
     <div className="relative w-72 h-72 md:w-96 md:h-96 flex items-center justify-center pointer-events-none select-none">
-      {/* Atmosphere / Corona */}
       <div 
         className="absolute w-64 h-64 md:w-80 md:h-80 rounded-full transition-all duration-1000 ease-out"
         style={{ 
@@ -40,16 +39,11 @@ const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
           transform: `scale(${isTotality ? 2.6 : 1.15})`
         }}
       />
-      {/* Sun Body */}
       <div className={`absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-white transition-all duration-1000 ${isTotality ? 'totality-active scale-105' : 'shadow-[0_0_60px_rgba(255,255,255,0.3)]'}`} />
-      
-      {/* Moon Body */}
       <div 
         className="absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-black transition-transform duration-200 ease-out"
         style={{ transform: `translateX(${moonOffset}%) scale(1.002)` }}
       />
-
-      {/* Diamond Ring Highlight */}
       <div 
         className="absolute w-12 h-12 transition-opacity duration-700"
         style={{ 
@@ -77,7 +71,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const index = Math.min(Math.floor(progress * PHASES.length), PHASES.length - 1);
     if (index !== currentPhaseIndex) setCurrentPhaseIndex(index);
-  }, [progress]);
+  }, [progress, currentPhaseIndex]);
 
   useEffect(() => {
     let lastTime = performance.now();
@@ -85,7 +79,6 @@ const App: React.FC = () => {
     const animate = (time: number) => {
       if (isPlaying) {
         const delta = time - lastTime;
-        // CINEMATIC SPEED: Slower near totality
         const speed = (progress > 0.47 && progress < 0.53) ? 0.000015 : 0.000045;
         setProgress(p => {
           const next = p + delta * speed;
@@ -103,16 +96,48 @@ const App: React.FC = () => {
     const fetchAI = async () => {
       try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+        
+        const phaseSchema = {
+          type: Type.OBJECT,
+          properties: {
+            sentence: { type: Type.STRING },
+            feeling: { type: Type.STRING },
+            reflection: { type: Type.STRING }
+          },
+          required: ["sentence", "feeling", "reflection"]
+        };
+
         const response = await ai.models.generateContent({
           model: 'gemini-3-flash-preview',
-          contents: 'Narrative for Ibiza Solar eclipse experience.',
+          contents: 'Generate luxury poetic content for the Ibiza Solar experience. Ensure you use the exact keys: before, first_contact, during_peak, totality, return_of_light, afterglow.',
           config: {
-            systemInstruction: 'Luxury storyteller. 6 phases: Anticipation, First Contact, Peak, Totality, Return, Afterglow. Sentence (White, 12 words max), Feeling (Gold, 2 words), Reflection (Yellow, 1 question).',
-            responseMimeType: "application/json"
+            systemInstruction: 'You are a luxury experience designer. Create 6 phases of an eclipse. Tone is quiet, minimal, and premium. Sentence (White theme, max 12 words), Feeling (Gold theme, 2 keywords), Reflection (Yellow theme, 1 gentle question).',
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                before: phaseSchema,
+                first_contact: phaseSchema,
+                during_peak: phaseSchema,
+                totality: phaseSchema,
+                return_of_light: phaseSchema,
+                afterglow: phaseSchema
+              },
+              required: PHASES
+            }
           }
         });
-        if (response.text) setStoryline(JSON.parse(response.text));
-      } catch (e) { console.debug("AI narrative failed, using high-end defaults."); }
+
+        if (response.text) {
+          const parsed = JSON.parse(response.text);
+          // Only update if all required keys are present to prevent crashes
+          if (PHASES.every(key => parsed[key])) {
+            setStoryline(parsed);
+          }
+        }
+      } catch (e) { 
+        console.warn("AI narrative failed or formatted incorrectly, staying with defaults.", e); 
+      }
     };
     fetchAI();
   }, []);
@@ -154,26 +179,29 @@ const App: React.FC = () => {
         </div>
 
         <div className="relative w-full max-w-2xl text-center min-h-[300px] flex items-center justify-center">
-          {PHASES.map((key, index) => (
-            <div 
-              key={key} 
-              className={`absolute fade-in flex flex-col items-center pointer-events-none ${index === currentPhaseIndex ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-90 blur-2xl'}`}
-            >
-              <h2 className="serif text-white text-4xl md:text-6xl mb-8 leading-tight tracking-wide font-light drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
-                {storyline[key].sentence}
-              </h2>
-              <div className="flex items-center space-x-6 mb-10">
-                {storyline[key].feeling.split(',').map((f: string, i: number) => (
-                  <span key={i} className="text-[11px] uppercase tracking-[0.6em] text-yellow-500 font-bold px-5 py-1.5 border border-yellow-500/30 rounded-full bg-yellow-500/5">
-                    {f.trim()}
-                  </span>
-                ))}
+          {PHASES.map((key, index) => {
+            const phaseData = storyline[key] || DEFAULT_STORYLINE[key];
+            return (
+              <div 
+                key={key} 
+                className={`absolute fade-in flex flex-col items-center pointer-events-none ${index === currentPhaseIndex ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-90 blur-2xl'}`}
+              >
+                <h2 className="serif text-white text-4xl md:text-6xl mb-8 leading-tight tracking-wide font-light drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+                  {phaseData?.sentence}
+                </h2>
+                <div className="flex items-center space-x-6 mb-10">
+                  {phaseData?.feeling?.split(',').map((f: string, i: number) => (
+                    <span key={i} className="text-[11px] uppercase tracking-[0.6em] text-yellow-500 font-bold px-5 py-1.5 border border-yellow-500/30 rounded-full bg-yellow-500/5">
+                      {f.trim()}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-yellow-100/70 italic font-light text-xl md:text-2xl max-w-sm mx-auto leading-relaxed pt-8 border-t border-white/10">
+                  {phaseData?.reflection}
+                </p>
               </div>
-              <p className="text-yellow-100/70 italic font-light text-xl md:text-2xl max-w-sm mx-auto leading-relaxed pt-8 border-t border-white/10">
-                {storyline[key].reflection}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
