@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'https://esm.sh
 import { createRoot } from 'https://esm.sh/react-dom@19.0.0/client';
 import { GoogleGenAI, Type } from "https://esm.sh/@google/genai@1.40.0";
 
-// --- Configuration & Constants ---
+// --- 1. Types & Config ---
 const PHASES = ['before', 'first_contact', 'during_peak', 'totality', 'return_of_light', 'afterglow'];
 const PHASE_LABELS: Record<string, string> = {
   before: 'Anticipation',
@@ -22,7 +22,7 @@ const DEFAULT_STORYLINE: any = {
   afterglow: { sentence: "The shadow leaves a golden mark upon the soul.", feeling: "Presence, Awake", reflection: "How will you speak of this to the future?" }
 };
 
-// --- Component: EclipseVisual ---
+// --- 2. Component: EclipseVisual ---
 const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
   const moonOffset = (0.5 - progress) * 115;
   const isTotality = progress > 0.496 && progress < 0.504;
@@ -30,6 +30,7 @@ const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
   
   return (
     <div className="relative w-72 h-72 md:w-96 md:h-96 flex items-center justify-center pointer-events-none select-none">
+      {/* Corona Atmosphere */}
       <div 
         className="absolute w-64 h-64 md:w-80 md:h-80 rounded-full transition-all duration-1000 ease-out"
         style={{ 
@@ -41,11 +42,14 @@ const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
           transform: `scale(${isTotality ? 2.8 : 1.15})`
         }}
       />
+      {/* The Sun */}
       <div className={`absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-white transition-all duration-1000 ${isTotality ? 'totality-glow scale-105 shadow-[0_0_100px_#fff]' : 'shadow-[0_0_60px_rgba(255,255,255,0.3)]'}`} />
+      {/* The Moon */}
       <div 
         className="absolute w-40 h-40 md:w-56 md:h-56 rounded-full bg-black transition-transform duration-150 ease-out border border-white/5"
         style={{ transform: `translateX(${moonOffset}%) scale(1.005)` }}
       />
+      {/* Diamond Ring Effect */}
       <div 
         className="absolute w-14 h-14 transition-opacity duration-700"
         style={{ 
@@ -60,22 +64,28 @@ const EclipseVisual: React.FC<{ progress: number }> = ({ progress }) => {
   );
 };
 
-// --- Component: Main Application ---
+// --- 3. Main Application ---
 const App: React.FC = () => {
   const [storyline, setStoryline] = useState<any>(DEFAULT_STORYLINE);
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   
+  // Create stars once
   const stars = useMemo(() => Array.from({ length: 80 }).map((_, i) => ({
-    top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, size: `${Math.random() * 1.5 + 0.5}px`, delay: `${Math.random() * 5}s`
+    top: `${Math.random() * 100}%`, 
+    left: `${Math.random() * 100}%`, 
+    size: `${Math.random() * 1.5 + 0.5}px`, 
+    delay: `${Math.random() * 5}s`
   })), []);
 
+  // Sync phase index with slider progress
   useEffect(() => {
     const index = Math.min(Math.floor(progress * PHASES.length), PHASES.length - 1);
     if (index !== currentPhaseIndex) setCurrentPhaseIndex(index);
   }, [progress, currentPhaseIndex]);
 
+  // Autoplay Loop
   useEffect(() => {
     let lastTime = performance.now();
     let frame: number;
@@ -98,17 +108,18 @@ const App: React.FC = () => {
     return () => cancelAnimationFrame(frame);
   }, [isPlaying, progress]);
 
+  // Fetch AI content if key is available
   const fetchAI = useCallback(async () => {
     try {
       const apiKey = (window as any).process?.env?.API_KEY;
-      if (!apiKey) return;
+      if (!apiKey || apiKey === "") return;
 
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: 'Generate 6 poetic phases for Ibiza Total Solar glasses. Order: before, first_contact, during_peak, totality, return_of_light, afterglow.',
+        contents: 'Generate 6 poetic phases for Ibiza Total Solar. Order: before, first_contact, during_peak, totality, return_of_light, afterglow.',
         config: {
-          systemInstruction: 'Luxury experience designer for "Ibiza Total Solar". 6 phases. Premium, minimal, poetic. Each phase needs: sentence (short), feeling (2 tags), reflection (question).',
+          systemInstruction: 'Luxury experience designer. Premium, poetic, minimal. 6 phases. Each: sentence (max 12 words), feeling (2 tags), reflection (question).',
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
@@ -131,12 +142,14 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen w-full flex flex-col justify-between overflow-hidden relative select-none">
+      {/* Background Layer */}
       <div className="stars-container">
         {stars.map((s, i) => (
           <div key={i} className="star animate-pulse" style={{ top: s.top, left: s.left, width: s.size, height: s.size, animationDelay: s.delay }} />
         ))}
       </div>
 
+      {/* Header */}
       <header className="p-8 md:p-12 flex justify-between items-center z-20">
         <div className="flex flex-col">
           <h1 className="serif text-white text-2xl tracking-[0.4em] uppercase font-light">Ibiza</h1>
@@ -157,6 +170,7 @@ const App: React.FC = () => {
         </button>
       </header>
 
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col items-center justify-center relative">
         <div className="mb-6 transition-transform duration-[2000ms]" style={{ transform: `scale(${1 + (progress > 0.46 && progress < 0.54 ? 0.15 : 0)})` }}>
           <EclipseVisual progress={progress} />
@@ -175,7 +189,7 @@ const App: React.FC = () => {
                 </h2>
                 <div className="flex items-center space-x-5 mb-10">
                   {data.feeling.split(',').map((f: string, i: number) => (
-                    <span key={i} className="text-[9px] uppercase tracking-[0.5em] text-yellow-500 font-bold px-4 py-1.5 border border-yellow-500/20 rounded-full bg-yellow-500/5 shadow-[0_0_10px_rgba(234,179,8,0.1)]">
+                    <span key={i} className="text-[9px] uppercase tracking-[0.5em] text-yellow-500 font-bold px-4 py-1.5 border border-yellow-500/20 rounded-full bg-yellow-500/5">
                       {f.trim()}
                     </span>
                   ))}
@@ -189,6 +203,7 @@ const App: React.FC = () => {
         </div>
       </div>
 
+      {/* Interactive Footer Controls */}
       <footer className="p-10 md:p-16 z-20 w-full max-w-5xl mx-auto">
         <div className="flex justify-between mb-10 px-4 overflow-x-auto no-scrollbar space-x-6">
           {PHASES.map((key, index) => (
@@ -209,18 +224,17 @@ const App: React.FC = () => {
             className="absolute -top-6 w-full h-12 opacity-0 cursor-pointer z-50"
           />
           <div className="absolute h-full bg-yellow-500 transition-all duration-300 shadow-[0_0_20px_#f59e0b]" style={{ width: `${progress * 100}%` }} />
-          <div className="absolute w-4 h-4 bg-white rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none shadow-[0_0_15px_#fff] transition-transform group-hover:scale-125" style={{ left: `${progress * 100}%` }} />
+          <div className="absolute w-4 h-4 bg-white rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none shadow-[0_0_15px_#fff]" style={{ left: `${progress * 100}%` }} />
         </div>
         
         <div className="mt-10 flex justify-center opacity-20 text-[7px] uppercase tracking-[1.5em] font-medium text-center">
-          <span>Orbital Synchronization</span>
+          <span>Alignment Synchronized</span>
         </div>
       </footer>
     </div>
   );
 };
 
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  createRoot(rootElement).render(<App />);
-}
+// --- 4. Render ---
+const root = createRoot(document.getElementById('root')!);
+root.render(<App />);
