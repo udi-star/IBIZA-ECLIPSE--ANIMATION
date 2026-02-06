@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'https://esm.sh/react@^19.2.4';
-import ReactDOM from 'react-dom/client';
-import { GoogleGenAI, Type } from "https://esm.sh/@google/genai@^1.40.0";
+import React, { useState, useEffect, useMemo, useCallback } from 'https://esm.sh/react@19.0.0';
+import { createRoot } from 'https://esm.sh/react-dom@19.0.0/client';
+import { GoogleGenAI, Type } from "https://esm.sh/@google/genai@1.40.0";
 
 // --- Configuration & Types ---
 const PHASES = ['before', 'first_contact', 'during_peak', 'totality', 'return_of_light', 'afterglow'];
@@ -97,7 +97,7 @@ const App: React.FC = () => {
 
   const fetchAI = useCallback(async () => {
     try {
-      // Safe access to process.env
+      // Safe access to process.env (Shimmed in index.html)
       const apiKey = (window as any).process?.env?.API_KEY || "";
       if (!apiKey) return;
 
@@ -236,9 +236,8 @@ const App: React.FC = () => {
   );
 };
 
-// Ensure the root element is present before mounting
+// Mount the application
 const container = document.getElementById('root');
 if (container) {
-  const root = ReactDOM.createRoot(container);
-  root.render(<App />);
+  createRoot(container).render(<App />);
 }
